@@ -1,0 +1,20 @@
+# -----------------------------------------------------------------------------
+# This file lists the Python packages required by the automation project.
+#
+# To install all dependencies, run:
+# pip install -r requirements.txt
+#
+# After installation, you must also download the necessary browser binaries:
+# playwright install
+# -----------------------------------------------------------------------------
+
+# Core Testing and Automation Frameworks
+pytest         # The test runner for executing test
+playwright        # The main browser automation library
+pytest-playwright  # The official plugin to integrate Playwright with Pytest
+
+# Reporting
+allure-pytest # Plugin to generate rich Allure test reports
+
+# Configuration Management
+PyYAML
