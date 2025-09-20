@@ -35,6 +35,6 @@ class Config:
 
     @classmethod
     def get_user(cls, role):
-        """Return username/password dict for a given role (e.g. software_uploader)."""
+        """Return username/password dict for a given role (e.g., software_uploader)."""
         return cls.get(f"users.{role}")
 

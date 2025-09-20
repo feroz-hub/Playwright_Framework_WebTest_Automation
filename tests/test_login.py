@@ -1,7 +1,7 @@
 import pytest
 from playwright.sync_api import expect
 from omsd_automation.utils.config_reader import Config
-from omsd_automation.utils.logger import setup_test_logging
+from omsd_automation.utils.logger_utils import setup_test_logger
 
 @pytest.mark.parametrize("case", Config.get("tests.login"))
 def test_login(page, case, login_page, home_page, base_page):
@@ -10,9 +10,9 @@ def test_login(page, case, login_page, home_page, base_page):
     """
 
     # Setup logger for this test
-    test_logger = setup_test_logging("test_login")
+    test_logger = setup_test_logger("test_login")
     test_name = f"Login Test ({case['username']})"
-    test_logger.test_start(test_name)
+    test_logger.log_action(test_name)
 
     try:
         # Step 1: Perform login

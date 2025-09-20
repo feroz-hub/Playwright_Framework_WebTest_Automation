@@ -1,4 +1,4 @@
-from playwright.sync_api import Page
+from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError
 from omsd_automation.pages.base_page import BasePage
 from omsd_automation.pages.login_page import LoginPage
 
@@ -21,7 +21,7 @@ class HomePage(BasePage):
     # ------------------------
     def do_open_user_menu(self):
         """Click on the user profile menu (generic action)."""
-        self.click(self.USER_PROFILE)
+        self.do_click(self.USER_PROFILE)
 
     def do_accept_cookies(self):
         """Accept cookies popup if present (only appears once on HomePage)."""
@@ -29,7 +29,7 @@ class HomePage(BasePage):
             cookie_btn = self.page.locator(self.ACCEPT_COOKIES_BTN)
             cookie_btn.wait_for(state="visible", timeout=3000)
             cookie_btn.click()
-        except Exception:
+        except PlaywrightTimeoutError:
             # Popup not present → continue silently
             pass
 
@@ -39,7 +39,7 @@ class HomePage(BasePage):
     def user_sign_out(self, test_case_id: str = None) -> LoginPage:
         """Business flow: sign out of the application and return the LoginPage."""
         self.do_open_user_menu()
-        self.click(self.SIGN_OUT_LINK)
+        self.do_click(self.SIGN_OUT_LINK)
         self.take_screenshot(test_case=test_case_id, step_name="sign_out")
         return LoginPage(self.page)
 
@@ -48,4 +48,4 @@ class HomePage(BasePage):
     # ------------------------
     def verify_user_logged_in(self) -> bool:
         """Verify if user profile is visible (indicates successful login)."""
-        return self.is_visible(self.USER_PROFILE)
+        return self.verify_visible(self.USER_PROFILE)

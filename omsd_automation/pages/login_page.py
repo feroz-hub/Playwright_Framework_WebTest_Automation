@@ -26,7 +26,7 @@ class LoginPage(BasePage):
     # ----------------------------------------------------------------
     def login(self, username: str, password: str, test_case_id: str = None) -> HomePage:
         """
-        Perform login with given credentials, mask password in logs, and take screenshot.
+        Perform login with given credentials, mask the password in logs, and take a screenshot.
         Returns HomePage object for action chaining.
 
         :param username: User email/ID
