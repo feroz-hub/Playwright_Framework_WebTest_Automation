@@ -1,0 +1,93 @@
+# config/config.yaml - Non-sensitive configuration only
+# This file is safe to commit to version control
+
+# Default environment (can be overridden by APP_ENV environment variable)
+env: "staging"
+
+# Browser settings (can be overridden by environment variables)
+browser: "chrome"  # options: chrome, edge, safari, firefox
+headless: true
+implicit_wait: 5
+explicit_wait: 10
+
+# Upload file mappings (paths can be overridden by environment variables)
+upload_files:
+  esg_410: "omsd_automation/uploads/ESG-410_v01.00.00.00-New_11"
+
+# Test configuration structure
+tests:
+  login:
+    expected: "success"  # Expected result for login tests
+
+# Environment structure definitions (actual values come from .env)
+environments:
+  staging:
+    # base_url will come from STAGING_BASE_URL env var, this is a fallback
+    base_url: "https://softwaredelivery-stg3.olympusmedical.com"
+
+    # User roles available in staging (credentials from environment variables)
+    user_roles:
+      - software_uploader
+      - distribution_manager
+      - distribution_manager_without_permission
+      - device_update_executor_without_permission
+      - device_update_executor
+      - customer
+
+    # Fallback user structure (actual credentials in .env)
+    users:
+      software_uploader:
+        description: "User with software upload permissions"
+        role: "uploader"
+      distribution_manager:
+        description: "User with distribution management permissions"
+        role: "manager"
+      distribution_manager_without_permission:
+        description: "Manager user without certain permissions"
+        role: "limited_manager"
+      device_update_executor_without_permission:
+        description: "Executor user without certain permissions"
+        role: "limited_executor"
+      device_update_executor:
+        description: "User with device update execution permissions"
+        role: "executor"
+      customer:
+        description: "Customer user with limited access"
+        role: "customer"
+
+  prod:
+    # base_url will come from PROD_BASE_URL env var, this is a fallback
+    base_url: "https://softwaredelivery.olympusmedical.com"
+
+    # User roles available in production
+    user_roles:
+      - software_uploader
+      - distribution_manager
+
+    # Fallback user structure (actual credentials in .env)
+    users:
+      software_uploader:
+        description: "Production software uploader"
+        role: "uploader"
+      distribution_manager:
+        description: "Production distribution manager"
+        role: "manager"
+
+# Database structure (actual credentials from environment variables)
+db:
+  # These are fallback values, actual values should be in .env
+  server_fallback: "localhost,1433"
+  name_fallback: "test_database"
+
+# Default paths and settings
+paths:
+  screenshots: "screenshots"
+  videos: "videos"
+  test_data: "test_data"
+  uploads: "omsd_automation/uploads"
+
+# Timeout settings
+timeouts:
+  default: 30000
+  short: 5000
+  long: 60000

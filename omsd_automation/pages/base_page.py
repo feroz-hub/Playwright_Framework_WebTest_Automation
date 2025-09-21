@@ -1,85 +1,134 @@
-import re
-from datetime import datetime
 from pathlib import Path
-from playwright.sync_api import Page, Locator
+from typing import Literal, Optional, Union, Sequence
 
-from omsd_automation.utils.logger_utils import setup_test_logger
+from playwright.sync_api import Page, Locator, TimeoutError as PlaywrightTimeoutError
 
-
-def _sanitize(name: str) -> str:
-    """Sanitize strings for safe filenames: allow alnum, dash, underscore, dot."""
-    name = name.strip()
-    return re.sub(r"[^A-Za-z0-9._-]+", "_", name)[:255]
-
+ElementState = Literal["attached", "detached", "visible", "hidden"]
 
 class BasePage:
     """
-    BasePage provides reusable Playwright wrapper methods.
-    All page objects must inherit from this to enforce consistency.
+    Provides a collection of reusable, log-free wrapper methods for Playwright.
+    This class's single responsibility is to simplify and standardize UI interactions.
     """
-
-    def __init__(self, page: Page, logger_name: str = "base_page"):
+    def __init__(self, page: Page):
+        """Initializes the BasePage with a Playwright Page instance."""
         self.page: Page = page
-        self.logger = setup_test_logger(logger_name)
 
-    # ----------------------------------------------------------------------
-    # Generic Action Methods (do_*)
-    # ----------------------------------------------------------------------
+    # --- Navigation Methods ---
+
+    def go_to(self, url: str) -> None:
+        """Navigates the current page to the specified URL with sensible defaults."""
+        # Use a more forgiving wait strategy and higher timeout to accommodate
+        # post-login redirects and heavy pages in staging environments.
+        self.page.goto(url, wait_until="domcontentloaded", timeout=60000)
+
+    # --- Core Interaction Methods ---
+
     def do_click(self, selector: str):
-        """Click an element by selector."""
-        self.logger.log_action(f"Clicking element: {selector}")
+        """Clicks an element identified by its selector."""
         self.page.locator(selector).click()
 
     def do_fill(self, selector: str, text: str):
-        """Fill text into an input field."""
-        self.logger.log_action(f"Filling '{text}' into element: {selector}")
+        """Fills an input field with the provided text."""
         self.page.locator(selector).fill(text)
 
-    def do_get_text(self, selector: str) -> str:
-        """Retrieve visible inner text of an element."""
-        text = self.page.locator(selector).inner_text()
-        self.logger.log_action(f"Retrieved text from {selector}: {text}")
-        return text
-
-    def verify_visible(self, selector: str) -> bool:
-        """Check if an element is visible."""
-        is_visible = self.page.locator(selector).is_visible()
-        self.logger.log_verification(f"Element {selector} is visible", is_visible)
-        return is_visible
-
-    # ----------------------------------------------------------------------
-    # Utility Helpers
-    # ----------------------------------------------------------------------
-    def take_screenshot(self, step_name: str, test_case: str = None) -> str:
-        """
-        Capture and save a screenshot.
-        Path format: screenshots/<test_case>/<step_name>_<timestamp>.png
-        """
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        step_sanitized = _sanitize(step_name)
-        test_case_sanitized = _sanitize(test_case) if test_case else "general"
-
-        folder = Path("screenshots") / test_case_sanitized
-        folder.mkdir(parents=True, exist_ok=True)
-
-        file_path = folder / f"{step_sanitized}_{timestamp}.png"
-        self.page.screenshot(path=str(file_path))
-        self.logger.log_action(f"Screenshot saved: {file_path}")
-        return str(file_path)
-
-    # ----------------------------------------------------------------------
-    # Advanced Helpers
-    # ----------------------------------------------------------------------
-    def get_locator(self, selector: str) -> Locator:
-        """Return a Playwright Locator object (for advanced use cases)."""
-        return self.page.locator(selector)
+    def do_clear(self, selector: str):
+        """Clears the content of an input element."""
+        self.page.locator(selector).clear()
 
     def do_hover(self, selector: str):
-        """Hover over an element."""
-        self.logger.log_action(f"Hovering over element: {selector}")
+        """Hovers the mouse cursor over an element."""
         self.page.locator(selector).hover()
 
     def do_press_key(self, selector: str, key: str):
-        """Press a key inside an input field."""
-        self.logger.log_action(f"Pressing key '{key}' on {selector}")
+        """Simulates a key press on an element (e.g., 'Enter', 'ArrowDown')."""
         self.page.locator(selector).press(key)
+
+    # --- State & Data Retrieval Methods ---
+
+    def do_get_text(self, selector: str) -> str:
+        """Retrieves the visible inner text of an element."""
+        return self.page.locator(selector).inner_text()
+
+    def do_get_input_value(self, selector: str) -> str:
+        """Retrieves the 'value' attribute from an input element."""
+        return self.page.locator(selector).input_value()
+
+    def is_visible(self, selector: str) -> bool:
+        """Checks if an element is currently visible on the page."""
+        return self.page.locator(selector).is_visible()
+
+    def is_enabled(self, selector: str) -> bool:
+        """Checks if an element is enabled (e.g., a button is clickable)."""
+        return self.page.locator(selector).is_enabled()
+
+    def is_checked(self, selector: str) -> bool:
+        """Checks if a checkbox or radio button is checked."""
+        return self.page.locator(selector).is_checked()
+
+    # --- Wait & Synchronization Methods ---
+
+    def wait_for_element(self, selector: str, state: ElementState = "visible", timeout: int = 5000) -> bool:
+        """
+        Waits for an element to reach a specific state ('visible', 'hidden', 'attached').
+        Returns True if the state is reached, False on timeout.
+        """
+        try:
+            self.page.locator(selector).wait_for(state=state, timeout=timeout)
+            return True
+        except PlaywrightTimeoutError:
+            return False
+
+    # --- Utility & Advanced Methods ---
+
+    def take_screenshot(
+            self,
+            path: Optional[Union[Path, str]] = None,
+            *,
+            full_page: bool = False,
+            timeout: Optional[float] = None,
+            image_type: Literal["jpeg", "png"] = "png",
+            quality: Optional[int] = None,
+            omit_background: bool = False,
+            animations: Literal["allow", "disabled"] = "disabled",
+            caret: Literal["hide", "initial"] = "hide",
+            mask: Optional[Sequence[Locator]] = None,
+            mask_color: Optional[str] = None
+    ) -> bytes:
+        """
+        Captures a screenshot with customizable options.
+
+        Args:
+            path: File path to save the screenshot. If None, returns bytes without saving.
+            full_page: Whether to capture the full scrollable page.
+            timeout: Maximum time in milliseconds. Defaults to 30000ms.
+            image_type: Screenshot format - 'png' or 'jpeg'.
+            quality: Image quality 0-100 (only for jpeg).
+            omit_background: Hide white background for transparency (png only).
+            animations: Whether to allow or disable animations during capture.
+            caret: Whether to hide or show text cursor.
+            mask: Locators of elements to mask with colored overlay.
+            mask_color: Color of the mask overlay (CSS color format).
+
+        Returns:
+            Screenshot as bytes.
+        """
+        return self.page.screenshot(
+            path=str(path) if path else None,
+            full_page=full_page,
+            timeout=timeout,
+            type=image_type,
+            quality=quality,
+            omit_background=omit_background,
+            animations=animations,
+            caret=caret,
+            mask=mask,
+            mask_color=mask_color
+        )
+
+    def get_locator(self, selector: str) -> Locator:
+        """
+        Returns a Playwright Locator object for advanced chaining or assertions.
+        Use sparingly to avoid breaking the encapsulation pattern.
+        """
+        return self.page.locator(selector)
