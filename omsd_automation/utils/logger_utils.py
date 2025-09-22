@@ -46,15 +46,15 @@ class TestLogger:
         'screenshot': '📸'
     }
 
-    _DEFAULT_LOG_DIR = "logs"
-    _DEFAULT_LOG_LEVEL = logging.INFO
-    _LOGGER_NAMESPACE = "omsd"
+    DEFAULT_LOG_DIR = "logs"
+    DEFAULT_LOG_LEVEL = logging.INFO
+    LOGGER_NAMESPACE = "omsd"
 
     def __init__(
         self,
         test_name: str,
-        log_dir: str = _DEFAULT_LOG_DIR,
-        log_level: int = _DEFAULT_LOG_LEVEL,
+        log_dir: str = DEFAULT_LOG_DIR,
+        log_level: int = DEFAULT_LOG_LEVEL,
         use_emojis: bool = True,
     ) -> None:
         """Initialize TestLogger with a specified configuration.
@@ -82,7 +82,7 @@ class TestLogger:
     def _create_logger(self, log_level: int) -> logging.Logger:
         """Create and configure the underlying logger instance."""
         log_file = self._generate_log_filename()
-        logger_name = f"{self._LOGGER_NAMESPACE}.{self.test_name}"
+        logger_name = f"{self.LOGGER_NAMESPACE}.{self.test_name}"
 
         logger = logging.getLogger(logger_name)
         logger.setLevel(log_level)
@@ -250,15 +250,6 @@ class TestLogger:
             if isinstance(handler, logging.FileHandler):
                 return handler.baseFilename
         return None
-
-    @property
-    def DEFAULT_LOG_DIR(self):
-        return self._DEFAULT_LOG_DIR
-
-    @property
-    def DEFAULT_LOG_LEVEL(self):
-        return self._DEFAULT_LOG_LEVEL
-
 
 # ----------------------------------------------------------------------
 # Factory function (for test setup) - Maintains backward compatibility

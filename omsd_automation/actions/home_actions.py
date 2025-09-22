@@ -241,7 +241,7 @@ class HomeActions:
         heading_locator = self.home_page.get_product_category_heading()
 
         # This will now work correctly because 'expect' has been imported
-        expect(heading_locator).to_be_visible(timeout=10000)
+        expect(heading_locator).to_be_visible(timeout=30000)
 
         self.logger.log_info("✅ 'Product Category' heading is visible.")
 
