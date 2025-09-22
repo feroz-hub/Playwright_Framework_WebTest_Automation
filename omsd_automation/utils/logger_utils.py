@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import logging
 import os
+import sys
 from datetime import datetime
 from typing import Optional
 
@@ -116,14 +117,16 @@ class TestLogger:
                 self._safe_close_handler(handler)
             logger.handlers.clear()
 
-    def _create_console_handler(self, log_level: int) -> logging.StreamHandler:
+    @staticmethod
+    def _create_console_handler(log_level: int) -> logging.StreamHandler:
         """Create a console handler with simple message formatting."""
         handler = logging.StreamHandler()
         handler.setLevel(log_level)
         handler.setFormatter(logging.Formatter("%(message)s"))
         return handler
 
-    def _create_file_handler(self, log_file: str, log_level: int) -> logging.FileHandler:
+    @staticmethod
+    def _create_file_handler(log_file: str, log_level: int) -> logging.FileHandler:
         """Create a file handler with detailed formatting."""
         handler = logging.FileHandler(log_file, encoding="utf-8")
         handler.setLevel(log_level)
@@ -150,9 +153,13 @@ class TestLogger:
         """Safely close handler without breaking test execution."""
         try:
             handler.close()
-        except Exception:
-            # Best effort: never let logging teardown break tests
-            pass
+        except Exception as e:
+            # ✅ Best practice: Still report the error, but don't raise it.
+            # This makes the issue visible without stopping the test run.
+            print(
+                f"WARNING: Failed to close log handler '{handler}'. Error: {e}",
+                file=sys.stderr
+            )
 
     # -----------------------------
     # Generic logging wrappers (KISS principle - simple interface)
@@ -248,6 +255,10 @@ class TestLogger:
     def DEFAULT_LOG_DIR(self):
         return self._DEFAULT_LOG_DIR
 
+    @property
+    def DEFAULT_LOG_LEVEL(self):
+        return self._DEFAULT_LOG_LEVEL
+
 
 # ----------------------------------------------------------------------
 # Factory function (for test setup) - Maintains backward compatibility
@@ -255,7 +266,7 @@ class TestLogger:
 
 def setup_test_logger(
     test_name: str,
-    log_dir: str = TestLogger._DEFAULT_LOG_DIR,
+    log_dir: str = TestLogger.DEFAULT_LOG_DIR,
     log_level: Optional[int] = None,
     use_emojis: bool = True,
 ) -> TestLogger:
@@ -283,6 +294,6 @@ def setup_test_logger(
     return TestLogger(
         test_name=test_name,
         log_dir=log_dir,
-        log_level=log_level or TestLogger._DEFAULT_LOG_LEVEL,
+        log_level=log_level or TestLogger.DEFAULT_LOG_LEVEL,
         use_emojis=use_emojis,
     )

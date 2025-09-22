@@ -6,6 +6,7 @@ from omsd_automation.pages.home_page import HomePage
 from omsd_automation.pages.login_page import LoginPage
 from omsd_automation.utils.logger_utils import setup_test_logger
 
+from playwright.sync_api import expect
 
 class HomeActions:
     """
@@ -92,11 +93,11 @@ class HomeActions:
         self.logger.log_info(f"{log_prefix}Starting sign-out workflow")
 
         try:
-            # Step 1: Open user menu
+            # Step 1: Open the user menu
             self.logger.log_action(f"{log_prefix}Opening user profile menu")
             self.home_page.do_open_user_menu()
 
-            # Step 2: Verify sign-out link is visible
+            # Step 2: A verify sign-out link is visible
             if not self.home_page.is_sign_out_link_visible():
                 raise Exception("Sign out link is not visible after opening user menu")
 
@@ -104,7 +105,7 @@ class HomeActions:
             self.logger.log_action(f"{log_prefix}Clicking sign out link")
             self.home_page.do_click_sign_out()
 
-            # Step 4: Take screenshot for verification
+            # Step 4: Take a screenshot for verification
             screenshot_path = f"sign-out_{test_case_id}" if test_case_id else "sign-out"
             self.home_page.take_screenshot(path=f"screenshots/{screenshot_path}.png")
             self.logger.log_info(f"{log_prefix}Screenshot captured: {screenshot_path}.png")
@@ -128,7 +129,7 @@ class HomeActions:
         Accepts cookies popup if it's present on the page.
 
         Returns:
-            bool: True if cookies were accepted, False if popup wasn't present
+            bool: True if cookies were accepted, False if the popup wasn't present
         """
         self.logger.log_action("Checking for cookies acceptance popup")
         try:
@@ -156,11 +157,11 @@ class HomeActions:
             timeout_ms: Timeout in milliseconds for waiting for elements
 
         Returns:
-            bool: True if user is logged in (and matches expected username if provided)
+            bool: True if the user is logged in (and matches the expected username if provided)
         """
         self.logger.log_action("Verifying user login status")
         try:
-            # Wait for user profile to be visible
+            # Wait for the user profile to be visible
             if not self.home_page.wait_for_user_profile(timeout=timeout_ms):
                 self.logger.log_verification("User profile not visible", result=False)
                 return False
@@ -210,12 +211,12 @@ class HomeActions:
         """
         self.logger.log_action("Verifying current page is home page")
         try:
-            # Wait for page to load
+            # Wait for the page to load
             if not self.home_page.wait_for_page_load(timeout=timeout_ms):
                 self.logger.log_verification("Home page failed to load within timeout", result=False)
                 return False
 
-            # Verify we're on home page
+            # Verify we're on the home page
             is_home_page = self.home_page.verify_on_home_page(expected_url_fragment)
 
             if is_home_page:
@@ -231,6 +232,19 @@ class HomeActions:
             self.logger.log_error(f"Error during home page verification: {e}")
             return False
 
+    def verify_product_category_heading_is_visible(self):
+        """
+        Verifies that the 'Product Category' heading is visible on the page.
+        This is a high-level verification action.
+        """
+        self.logger.log_info("Verifying 'Product Category' heading is visible...")
+        heading_locator = self.home_page.get_product_category_heading()
+
+        # This will now work correctly because 'expect' has been imported
+        expect(heading_locator).to_be_visible(timeout=10000)
+
+        self.logger.log_info("✅ 'Product Category' heading is visible.")
+
     # ------------------------
     # Wait Operations
     # ------------------------
@@ -242,7 +256,7 @@ class HomeActions:
             timeout_ms: Timeout in milliseconds
 
         Returns:
-            bool: True if page loaded successfully, False on timeout
+            bool: True if the page loaded successfully, False on timeout
         """
         self.logger.log_action(f"Waiting for home page to load (timeout: {timeout_ms}ms)")
         try:
@@ -264,18 +278,18 @@ class HomeActions:
     # ------------------------
     def complete_initial_setup(self, timeout_ms: int = 10000) -> bool:
         """
-        Performs initial setup tasks when landing on home page.
-        This includes accepting cookies and waiting for page load.
+        Performs initial setup tasks when landing on the home page.
+        This includes accepting cookies and waiting for a page load.
 
         Args:
             timeout_ms: Timeout for page load operations
 
         Returns:
-            bool: True if setup completed successfully
+            bool: True if setup is completed successfully
         """
         self.logger.log_info("Starting home page initial setup")
         try:
-            # Wait for page to load
+            # Wait for the page to load
             if not self.wait_for_home_page_load(timeout_ms):
                 return False
 

@@ -1,7 +1,7 @@
 # file: pages/home_page.py
 
 from __future__ import annotations
-from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError
+from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError, Locator
 from omsd_automation.pages.base_page import BasePage
 
 
@@ -19,7 +19,7 @@ class HomePage(BasePage):
     USER_PROFILE = "#sysUserDisplayName"
     SIGN_OUT_LINK = "//span[text()='Sign Out']/parent::a"
     ACCEPT_COOKIES_BTN = "#onetrust-accept-btn-handler"
-
+    PRODUCT_CATEGORY_HEADING = "h4:has-text('Product Category')"
     def __init__(self, page: Page):
         """Initializes the HomePage with the Playwright Page and inherits from BasePage."""
         super().__init__(page)
@@ -56,6 +56,10 @@ class HomePage(BasePage):
             pass
         return self
 
+    def get_product_category_heading(self) -> Locator:
+        """Returns the locator for the 'Product Category' heading."""
+        return self.get_locator(self.PRODUCT_CATEGORY_HEADING)
+
     # ------------------------
     # State & Data Retrieval Methods
     # ------------------------
@@ -71,7 +75,7 @@ class HomePage(BasePage):
         return self.is_visible(self.USER_PROFILE)
 
     def is_sign_out_link_visible(self) -> bool:
-        """Checks if the sign-out link is visible (after opening user menu)."""
+        """Checks if the sign-out link is visible (after opening a user menu)."""
         return self.is_visible(self.SIGN_OUT_LINK)
 
     def is_cookies_popup_present(self) -> bool:
@@ -87,7 +91,7 @@ class HomePage(BasePage):
         Verify if currently on the home page.
 
         Args:
-            expected_url_fragment: Optional URL fragment to match against current URL
+            expected_url_fragment: Optional URL fragment to match against the current URL
 
         Returns:
             bool: True if on home page, False otherwise
@@ -120,6 +124,6 @@ class HomePage(BasePage):
             timeout: Timeout in milliseconds
 
         Returns:
-            bool: True if page loads successfully, False on timeout
+            bool: True if the page loads successfully, False on timeout
         """
         return self.wait_for_user_profile(timeout)

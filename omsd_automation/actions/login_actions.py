@@ -28,35 +28,22 @@ class LoginActions:
 
     def login(self, username: str, password: str) -> None:
         """
-        Performs the full login workflow.
-
-        This method logs the high-level business action and uses the
-        LoginPage to interact with the UI.
+        Performs the full login workflow with specific error handling.
         """
         self.logger.log_info(f"Attempting to log in as user: '{username}'")
         try:
             self.login_page.enter_username(username).enter_password(password)
             self.login_page.click_next()
             self.logger.log_info("Login form submitted successfully.")
-
-            # Best-effort: wait for the app home page after IDP redirect.
-            # If not redirected, navigate directly to the known landing page.
-            try:
-                # Match the correct post-login landing page
-                self.login_page.page.wait_for_url("**/Home/ProductCategory**", timeout=5000)
-            except Exception:
-                if self.base_url:
-                    target = self.base_url.rstrip("/") + "/Home/ProductCategory"
-                    self.logger.log_action(f"Navigating to expected home page: {target}")
-                    self.login_page.open(target)
         except Exception as e:
-            self.logger.log_error(f"An error occurred during the login process: {e}")
-            # Optionally, take a screenshot on failure
-            # self.login_page.take_screenshot("login_error")
-            raise
+            # This broad catch is acceptable here ONLY because we log and re-raise.
+            # This ensures the test fails correctly while providing a useful error message and screenshot.
+            self.logger.log_error(f"A critical error occurred during the login process: {e}")
+            # self.login_page.take_screenshot("login_failure")
+            raise  # ✅ Re-raising the exception is crucial to fail the test.
 
     def is_logged_in(self, timeout_ms: int = 10000) -> bool:
-        """Verifies if the user is logged in by checking presence of user profile element."""
+        """Verifies if the user is logged in by checking the presence of a user profile element."""
         selector = "#sysUserDisplayName"
         visible = self.login_page.wait_for_element(selector, state="visible", timeout=timeout_ms)
         self.logger.log_verification("User appears to be logged in", result=visible)
@@ -66,25 +53,3 @@ class LoginActions:
         """Navigates to the forgot password page."""
         self.logger.log_action("Navigating to the 'Forgot Password' page.")
         self.login_page.click_forgot_password()
-
-    def get_error_message(self) -> str:
-        """Best-effort retrieval of an error message on the login screen.
-
-        Tries a set of common selectors used by IDP/B2C pages and our app.
-        Returns an empty string if no obvious error element is found.
-        """
-        candidates = [
-            "[role='alert']",
-            "#errorMessage",
-            ".errorMessage",
-            ".alert-error",
-            "div[aria-live='assertive']",
-            "#claimVerificationServerError",
-        ]
-        for sel in candidates:
-            try:
-                if self.login_page.is_visible(sel):
-                    return self.login_page.do_get_text(sel)
-            except Exception:
-                continue
-        return ""

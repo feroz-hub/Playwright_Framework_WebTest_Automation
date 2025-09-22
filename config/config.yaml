@@ -6,7 +6,7 @@ env: "staging"
 
 # Browser settings (can be overridden by environment variables)
 browser: "chrome"  # options: chrome, edge, safari, firefox
-headless: true
+headless: False
 implicit_wait: 5
 explicit_wait: 10
 

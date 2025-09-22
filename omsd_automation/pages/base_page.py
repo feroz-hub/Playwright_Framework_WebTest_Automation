@@ -101,7 +101,7 @@ class BasePage:
         Args:
             path: File path to save the screenshot. If None, returns bytes without saving.
             full_page: Whether to capture the full scrollable page.
-            timeout: Maximum time in milliseconds. Defaults to 30000ms.
+            timeout: Maximum time in milliseconds. Defaults to 30,000 ms.
             image_type: Screenshot format - 'png' or 'jpeg'.
             quality: Image quality 0-100 (only for jpeg).
             omit_background: Hide white background for transparency (png only).

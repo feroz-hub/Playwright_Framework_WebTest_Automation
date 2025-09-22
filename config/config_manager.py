@@ -7,6 +7,8 @@ Handles all user roles and database configurations from your existing setup.
 """
 
 import os
+import sys
+
 import yaml
 from pathlib import Path
 from typing import Dict, Any, Optional, List
@@ -464,5 +466,10 @@ if not os.getenv('SKIP_CONFIG_VALIDATION', '').lower() == 'true':
         validation = validate_config()
         if validation['errors']:
             print("⚠️  Configuration validation found issues. Run print_config_summary() for details.")
-    except Exception:
-        pass  # Silent fail on import
+    except Exception as ex:
+        # ✅ IMPROVED: Catch the exception but print a warning to stderr.
+        # This makes the failure visible without stopping the program.
+        print(
+            f"WARNING: An unexpected error occurred during initial config validation: {ex}",
+            file=sys.stderr
+        )
