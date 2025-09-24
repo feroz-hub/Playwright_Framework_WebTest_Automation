@@ -13,7 +13,7 @@ class TestLogin:
         home_actions.accept_cookies_if_present()
 
 
-        # Assert: Verify user is redirected to the expected landing page (case-insensitive)
+        # Assert: Verify the product category heading is visible
         home_actions.verify_product_category_heading_is_visible()
 
 

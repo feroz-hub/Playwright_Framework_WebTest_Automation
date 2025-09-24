@@ -6,12 +6,13 @@ Enhanced with ConfigManager integration for seamless configuration management.
 """
 
 import os
+import re
 import sys
-import pytest
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 from typing import Generator, Dict, Any
 
+import pytest
 from playwright.sync_api import Browser, BrowserContext, Page, Playwright, sync_playwright
 
 # Ensure the project root is on sys.path for package imports
@@ -22,11 +23,6 @@ if str(PROJECT_ROOT) not in sys.path:
 # Import our configuration system
 from config.config_manager import (
     ConfigManager,
-    get_base_url,
-    get_user_credentials,
-    get_all_user_credentials,
-    get_test_config,
-    get_database_config,
     print_config_summary,
     validate_config
 )
@@ -69,7 +65,7 @@ def config_manager(request) -> ConfigManager:
         # Handle case where --env is not provided or not available
         pass
 
-    # Create ConfigManager instance
+    # Create an ConfigManager instance
     config = ConfigManager()
 
     # Validate configuration
@@ -171,7 +167,7 @@ def browser_type_launch_args(test_config_enhanced: Dict[str, Any]) -> Dict[str, 
 
 @pytest.fixture(scope="session")
 def playwright_instance() -> Generator[Playwright, None, None]:
-    """Session-scoped fixture providing Playwright instance."""
+    """Session-scoped fixture providing a Playwright instance."""
     with sync_playwright() as p:
         yield p
 
@@ -183,7 +179,7 @@ def browser(
         browser_type_launch_args: Dict[str, Any]
 ) -> Generator[Browser, None, None]:
     """
-    Session-scoped fixture providing browser instance with ConfigManager settings.
+    Session-scoped fixture providing a browser instance with ConfigManager settings.
 
     Args:
         playwright_instance: Playwright instance
@@ -205,22 +201,20 @@ def browser(
 
 @pytest.fixture(scope="function")
 def browser_context(
-        browser: Browser,
-        test_config_enhanced: Dict[str, Any]
+    browser: Browser,
+    test_config_enhanced: Dict[str, Any],
+    request: pytest.FixtureRequest  # ✅ 2. Add the 'request' fixture
 ) -> Generator[BrowserContext, None, None]:
     """
-    Function-scoped fixture providing browser context with ConfigManager settings.
-
-    Args:
-        browser: Browser instance
-        test_config_enhanced: Enhanced test configuration
-
-    Yields:
-        BrowserContext instance
+    Function-scoped fixture providing a browser context that saves videos
+    and traces into folders named after the test case.
     """
     # Setup directories
     SCREENSHOTS_DIR.mkdir(exist_ok=True)
     VIDEOS_DIR.mkdir(exist_ok=True)
+
+    # ✅ 3. Get the current test name and sanitize it
+    test_name = _sanitize_filename(request.node.name)
 
     # Context options based on configuration
     context_options = {
@@ -230,9 +224,12 @@ def browser_context(
         "accept_downloads": True,
     }
 
-    # Add video recording if enabled
+    # Add video recording if enabled, using the test-specific path
     if test_config_enhanced["video"]:
-        context_options["record_video_dir"] = str(VIDEOS_DIR)
+        # ✅ 4. Create a unique folder for this test's video
+        video_path = VIDEOS_DIR / test_name
+        video_path.mkdir(exist_ok=True)
+        context_options["record_video_dir"] = video_path
         context_options["record_video_size"] = {"width": 1920, "height": 1080}
 
     # Create context
@@ -251,11 +248,11 @@ def browser_context(
     # Cleanup
     if test_config_enhanced["tracing"]:
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        trace_path = SCREENSHOTS_DIR / f"trace-{test_config_enhanced['environment']}-{timestamp}.zip"
-        context.tracing.stop(path=str(trace_path))
+        # ✅ 5. (Bonus) Improve trace filename with the test name
+        trace_path = SCREENSHOTS_DIR / f"trace_{test_name}_{timestamp}.zip"
+        context.tracing.stop(path=trace_path)
 
     context.close()
-
 
 @pytest.fixture(scope="function")
 def page(browser_context: BrowserContext) -> Generator[Page, None, None]:
@@ -290,7 +287,7 @@ def base_url(config_manager: ConfigManager, test_config_enhanced: Dict[str, Any]
 
 @pytest.fixture(scope="session")
 def current_environment(config_manager: ConfigManager) -> str:
-    """Session-scoped fixture providing current environment name."""
+    """Session-scoped fixture providing the current environment name."""
     return config_manager.current_env
 
 
@@ -313,7 +310,7 @@ def all_user_credentials(config_manager: ConfigManager) -> Dict[str, Any]:
     Session-scoped fixture providing all available user credentials.
 
     Returns:
-        Dictionary containing all user credentials for current environment
+        Dictionary containing all user credentials for the current environment
     """
     return config_manager.get_all_user_credentials()
 
@@ -340,7 +337,7 @@ def distribution_manager_credentials(all_user_credentials):
 
 @pytest.fixture(scope="function")
 def distribution_manager_without_permission_credentials(all_user_credentials):
-    """Function-scoped fixture providing distribution manager without permission credentials."""
+    """Function-scoped fixture providing a distribution manager without permission credentials."""
     role = "distribution_manager_without_permission"
     if role not in all_user_credentials:
         pytest.skip(f"Credentials for {role} not configured in current environment")
@@ -453,7 +450,7 @@ def screenshot_on_failure(request, page: Page, current_environment: str):
     yield
 
     if hasattr(request.node, 'rep_call') and request.node.rep_call.failed:
-        # Ensure screenshots directory exists
+        # Ensure the screenshots directory exists
         SCREENSHOTS_DIR.mkdir(exist_ok=True)
 
         # Generate screenshot filename with environment context
@@ -505,10 +502,10 @@ def pytest_configure(config):
             print_config_summary()
             pytest.exit("Configuration validation completed", returncode=0)
     except (ValueError, AttributeError):
-        # Option not provided or not available
+        # Option isn't provided or not available
         pass
 
-    # Create necessary directories
+    # Create the necessary directories
     for directory in [SCREENSHOTS_DIR, VIDEOS_DIR, TEST_DATA_DIR]:
         directory.mkdir(exist_ok=True)
 
@@ -550,3 +547,7 @@ def pytest_sessionfinish(session, exitstatus):
         print(f"🎥 Videos recorded: {video_count}")
 
     print("=" * 80)
+
+def _sanitize_filename(name: str) -> str:
+    """Sanitize a string to be used as a filename."""
+    return re.sub(r"[^\w\-_. ]", "", name)

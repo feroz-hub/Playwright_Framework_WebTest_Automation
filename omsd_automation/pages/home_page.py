@@ -49,7 +49,7 @@ class HomePage(BasePage):
         """Accept cookies popup if present (only appears once on HomePage)."""
         try:
             cookie_btn = self.page.locator(self.ACCEPT_COOKIES_BTN)
-            cookie_btn.wait_for(state="visible", timeout=3000)
+            cookie_btn.wait_for(state="visible", timeout=7000)
             cookie_btn.click()
         except PlaywrightTimeoutError:
             # Popup not present → continue silently
