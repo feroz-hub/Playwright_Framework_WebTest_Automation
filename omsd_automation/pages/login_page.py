@@ -21,11 +21,11 @@ class LoginPage(BasePage):
         """Initializes the LoginPage with the Playwright Page and inherits from BasePage."""
         super().__init__(page)
 
-    # --- Navigation ---
-    def open(self, url: str) -> "LoginPage":
-        """Opens the login page URL and returns self for chaining."""
-        self.go_to(url)
-        return self
+    # # --- Navigation ---
+    # def open(self, url: str) -> "LoginPage":
+    #     """Opens the login page URL and returns self for chaining."""
+    #     self.go_to(url)
+    #     return self
 
     # --- UI Interaction Methods ---
 

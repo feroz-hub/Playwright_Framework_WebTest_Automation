@@ -10,21 +10,19 @@ class LoginActions:
     This class contains all logging and workflow logic, keeping the
     Page Object and tests clean.
     """
-    def __init__(self, login_page: LoginPage, base_url: str | None = None):
+    def __init__(self, login_page: LoginPage | None = None):
         """Initializes the actions with a LoginPage instance.
 
         Args:
             login_page: Page object for login interactions.
-            base_url: Optional base URL of the AUT to support post-login navigation.
         """
         self.login_page = login_page
-        self.base_url = base_url
         self.logger = setup_test_logger("LoginActions")
 
-    def open_login_page(self, url: str) -> None:
-        """Opens the login page URL."""
-        self.logger.log_action(f"Opening login page: {url}")
-        self.login_page.open(url)
+    # def open_login_page(self, url: str) -> None:
+    #     """Opens the login page URL."""
+    #     self.logger.log_action(f"Opening login page: {url}")
+    #     self.login_page.open(url)
 
     def login(self, username: str, password: str) -> None:
         """

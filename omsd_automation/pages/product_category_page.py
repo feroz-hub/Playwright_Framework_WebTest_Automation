@@ -1,87 +1,104 @@
 ﻿"""Product Category Page Object.
 
-This module provides a Playwright Page Object for interacting with the
-Product Category screen. It exposes typed helper methods that return
-Playwright Locator objects for:
-- Selecting a specific product's "Software List" button from the Medical products box.
-- Selecting a specific product's "Software List" button from the Other products box.
-- Accessing the Back button.
+This module implements a Playwright Page Object that models the "Product
+Category" screen. It centralizes CSS selectors and provides small, readable
+helper methods to interact with UI elements on that page.
 
-Notes:
-- We rely on accessible roles where possible to keep selectors resilient.
-- Constants are defined for CSS containers to keep selectors in one place.
+Exposed interactions:
+- Open a Medical product's Software List by product name.
+- Open an Other product's Software List by product name.
+- Click the Back button to navigate away.
+
+Design notes:
+- Keep selectors in one place via constants to simplify maintenance when the UI changes.
+- Prefer resilient, readable selectors. Where roles are available, they are usually
+  preferred; in this specific page we use container-scoped CSS for clarity.
+- Methods intentionally perform the action (click) rather than return locators to keep
+  the public API concise for test authors.
 """
 
-from playwright.sync_api import Page, Locator
+from playwright.sync_api import Page
 from omsd_automation.pages.base_page import BasePage
 
 
 class ProductCategoryPage(BasePage):
-    """Encapsulates interactions on the Product Category page.
+    """Page Object for the Product Category screen.
+
+    This class provides high-level interactions with the Product Category page,
+    such as opening a product's Software List or navigating back.
 
     Attributes:
-        page: The Playwright Page instance used to query and interact with the DOM.
+        page (Page): The Playwright Page instance used to query and interact with the DOM.
 
-    Selectors:
-        PRODUCT_BOX_SELECTOR: CSS selector that narrows to Medical products container.
-        OTHER_PRODUCT_BOX_SELECTOR: CSS selector that narrows to Other products container.
-        BACK_BUTTON_SELECTOR: CSS selector for the Back button (maybe unused if we rely on role-based locator).
+    Selector constants:
+        PRODUCT_BOX_SELECTOR (str): CSS selector scoping queries to the Medical products area.
+        OTHER_PRODUCT_BOX_SELECTOR (str): CSS selector scoping queries to the Other products area.
+        BACK_BUTTON (str): CSS selector for the Back button. Kept as a constant for clarity.
     """
 
-    # CSS containers for product grids
+    # CSS containers for product grids. We scope to the inner "div" so product tiles are targeted.
     PRODUCT_BOX_SELECTOR = "#medical-product-box div"
     OTHER_PRODUCT_BOX_SELECTOR = "#other-product-box div"
 
-    # Back button selector kept for reference; the role-based locator is preferred below
-    BACK_BUTTON_SELECTOR = "#back"
+    # Back button selector. We keep a clear, explicit selector (text-based) for stability.
+    BACK_BUTTON = "button:has-text('Back')"
 
     def __init__(self, page: Page) -> None:
-        """Initialize the page object with a Playwright Page instance."""
+        """Initialize the page object.
+
+        Args:
+            page: A Playwright Page instance.
+        """
         super().__init__(page)
-        self.page = page
 
-    def get_product_button(self, product_name: str) -> Locator:
-        """Return the Locator for a Medical product's "Software List" button.
+    @staticmethod
+    def _category_button(container_selector: str, product_name: str) -> str:
+        """Build a selector for a product's "Software List" button within a container.
 
-        Args:
-            product_name: Visible name of the product as it appears on the page.
-
-        Returns:
-            A Locator pointing to the "Software List" button for the given product
-            inside the Medical products section.
-        """
-        # We first scope to the Medical products container, filter by the visible text
-        # "<product_name> Software List", then ask Playwright for the button role inside it.
-        return (
-            self.page
-            .locator(self.PRODUCT_BOX_SELECTOR)
-            .filter(has_text=f"{product_name} Software List")
-            .get_by_role("button")
-        )
-
-    def other_product_button(self, product_name: str) -> Locator:
-        """Return the Locator for an Other product's "Software List" button.
+        The selector scopes to the provided container, finds a tile containing the
+        product name with the trailing label "Software List", and then narrows to
+        the actionable button within that tile.
 
         Args:
-            product_name: Visible name of the product as it appears on the page.
+            container_selector: CSS selector that scopes the search (e.g., medical vs. other products).
+            product_name: The exact product display name as rendered in the UI.
 
         Returns:
-            A Locator pointing to the "Software List" button for the given product
-            inside the Other products section.
+            A CSS selector string that uniquely targets the button for the given product.
         """
-        return (
-            self.page
-            .locator(self.OTHER_PRODUCT_BOX_SELECTOR)
-            .filter(has_text=f"{product_name} Software List")
-            .get_by_role("button")
-        )
+        return f"{container_selector} div:has-text('{product_name} Software List') >> button"
 
-    def get_back_button(self) -> Locator:
-        """Return the Locator for the Back button.
+    def open_medical_product(self, product_name: str) -> None:
+        """Open the Software List for a Medical product by clicking its button.
 
-        We prefer an accessible role-based query to keep the selector robust
-        against minor DOM changes. If necessary, you can switch to the CSS
-        selector stored in BACK_BUTTON_SELECTOR.
+        Args:
+            product_name: The product's display name as shown in the Medical products box.
+
+        Notes:
+            - This method clicks the element; it does not return a locator.
+            - Waiting, visibility checks, and retry logic are delegated to BasePage.do_click.
         """
-        # Alternative: return self.page.locator(self.BACK_BUTTON_SELECTOR)
-        return self.page.get_by_role("button", name="Back")
+        locator = self._category_button(self.PRODUCT_BOX_SELECTOR, product_name)
+        self.do_click(locator)
+
+    def open_other_product(self, product_name: str) -> None:
+        """Open the Software List for an Other product by clicking its button.
+
+        Args:
+            product_name: The product's display name as shown in the Other products box.
+
+        Notes:
+            - This method clicks the element; it does not return a locator.
+            - Waiting, visibility checks, and retry logic are delegated to BasePage.do_click.
+        """
+        locator = self._category_button(self.OTHER_PRODUCT_BOX_SELECTOR, product_name)
+        self.do_click(locator)
+
+    def click_back(self) -> None:
+        """Click the Back button to navigate to the previous page or listing.
+
+        Notes:
+            - The actual navigation target depends on the application's routing.
+            - Waiting and click stability are delegated to BasePage.do_click.
+        """
+        self.do_click(self.BACK_BUTTON)

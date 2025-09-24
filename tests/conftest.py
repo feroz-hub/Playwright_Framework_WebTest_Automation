@@ -24,7 +24,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from config.config_manager import (
     ConfigManager,
     print_config_summary,
-    validate_config
+    validate_config, get_base_url
 )
 
 # Configuration constants
@@ -398,6 +398,8 @@ def invalid_user_credentials():
 def login_page(page: Page):
     """Function-scoped fixture providing LoginPage instance."""
     from omsd_automation.pages.login_page import LoginPage
+    base_url = get_base_url()
+    page.goto(base_url)
     return LoginPage(page)
 
 
@@ -413,17 +415,10 @@ def home_page(page: Page):
 # =============================================================================
 
 @pytest.fixture(scope="function")
-def login_actions(login_page, base_url):
-    """Function-scoped fixture providing LoginActions instance pre-navigated to base URL."""
+def login_actions(login_page):
+    """Function-scoped fixture providing LoginActions."""
     from omsd_automation.actions.login_actions import LoginActions
-    actions = LoginActions(login_page, base_url=base_url)
-    # Ensure we are on the login page before performing actions
-    try:
-        actions.open_login_page(base_url)
-    except Exception:
-        # Ignore navigation errors here; actual login will surface issues
-        pass
-    return actions
+    return LoginActions(login_page)
 
 
 @pytest.fixture(scope="function")
