@@ -17,8 +17,8 @@ Design notes:
   the public API concise for test authors.
 """
 
-from playwright.sync_api import Page
-from omsd_automation.pages.base_page import BasePage
+
+from apps.omsd_automation.pages.base_page import BasePage
 
 
 class ProductCategoryPage(BasePage):
@@ -37,38 +37,36 @@ class ProductCategoryPage(BasePage):
     """
 
     # CSS containers for product grids. We scope to the inner "div" so product tiles are targeted.
-    PRODUCT_BOX_SELECTOR = "#medical-product-box div"
-    OTHER_PRODUCT_BOX_SELECTOR = "#other-product-box div"
+    PRODUCT_BOX_SELECTOR = "#medical-product-box"
+    OTHER_PRODUCT_BOX_SELECTOR = "#other-product-box"
 
     # Back button selector. We keep a clear, explicit selector (text-based) for stability.
     BACK_BUTTON = "button:has-text('Back')"
 
-    def __init__(self, page: Page) -> None:
+    def __init__(self) -> None:
         """Initialize the page object.
 
         Args:
             page: A Playwright Page instance.
         """
-        super().__init__(page)
+        super().__init__()
 
     @staticmethod
     def _category_button(container_selector: str, product_name: str) -> str:
-        """Build a selector for a product's "Software List" button within a container.
-
-        The selector scopes to the provided container, finds a tile containing the
-        product name with the trailing label "Software List", and then narrows to
-        the actionable button within that tile.
+        """
+        Build a Playwright-compatible selector string for a product's "Software List" button.
 
         Args:
-            container_selector: CSS selector that scopes the search (e.g., medical vs. other products).
+            container_selector: CSS selector that scopes the search (e.g., medical products container).
             product_name: The exact product display name as rendered in the UI.
 
         Returns:
-            A CSS selector string that uniquely targets the button for the given product.
+            A selector string that targets the button inside the product tile.
         """
-        return f"{container_selector} div:has-text('{product_name} Software List') >> button"
+        return f"{container_selector} div:has-text('{product_name} Software List') >> role=button"
 
-    def open_medical_product(self, product_name: str) -> None:
+
+    def open_software(self, product_name: str) -> None:
         """Open the Software List for a Medical product by clicking its button.
 
         Args:
@@ -78,8 +76,9 @@ class ProductCategoryPage(BasePage):
             - This method clicks the element; it does not return a locator.
             - Waiting, visibility checks, and retry logic are delegated to BasePage.do_click.
         """
-        locator = self._category_button(self.PRODUCT_BOX_SELECTOR, product_name)
-        self.do_click(locator)
+        locator_str = self._category_button(self.PRODUCT_BOX_SELECTOR,product_name)
+        self._click_button_when_ready(locator_str)
+
 
     def open_other_product(self, product_name: str) -> None:
         """Open the Software List for an Other product by clicking its button.
@@ -92,8 +91,7 @@ class ProductCategoryPage(BasePage):
             - Waiting, visibility checks, and retry logic are delegated to BasePage.do_click.
         """
         locator = self._category_button(self.OTHER_PRODUCT_BOX_SELECTOR, product_name)
-        self.do_click(locator)
-
+        self._click_button_when_ready(locator)
     def click_back(self) -> None:
         """Click the Back button to navigate to the previous page or listing.
 
@@ -102,3 +100,13 @@ class ProductCategoryPage(BasePage):
             - Waiting and click stability are delegated to BasePage.do_click.
         """
         self.do_click(self.BACK_BUTTON)
+
+    def _click_button_when_ready(self, locator_str: str) -> None:
+        """Wait for a button to be ready and click it.
+
+        - Centralizes the wait-then-click sequence to keep methods short and DRY.
+        """
+        self.wait_for_selector_base(locator_str)
+        self.to_be_visible(locator_str)
+        self.to_be_enabled(locator_str)
+        self.do_click(locator_str)

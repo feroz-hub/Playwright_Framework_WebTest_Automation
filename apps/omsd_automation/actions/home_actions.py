@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 from typing import Optional
-from omsd_automation.pages.home_page import HomePage
-from omsd_automation.pages.login_page import LoginPage
-from omsd_automation.utils.logger_utils import setup_test_logger
+
+from apps.omsd_automation.actions.base_actions import BaseActions
+from apps.omsd_automation.pages.home_page import HomePage
+from apps.omsd_automation.pages.login_page import LoginPage
 
 from playwright.sync_api import expect
 
-class HomeActions:
+class HomeActions(BaseActions):
     """
     Orchestrates HomePage methods into reusable business workflows.
 
@@ -17,15 +18,16 @@ class HomeActions:
     related to the Home/Dashboard page.
     """
 
-    def __init__(self, home_page: HomePage):
+    def __init__(self, home_page: HomePage, logger=None):
         """
         Initializes the actions with a HomePage instance.
 
         Args:
             home_page: HomePage instance for UI interactions
         """
+        super().__init__(logger)
         self.home_page = home_page
-        self.logger = setup_test_logger("HomeActions")
+
 
     # ------------------------
     # Navigation Actions
@@ -133,7 +135,7 @@ class HomeActions:
         """
         self.logger.log_action("Checking for cookies acceptance popup")
         try:
-            if self.home_page.is_cookies_popup_present():
+            if self.home_page.is_cookies_popup_present_enabled():
                 self.logger.log_info("Cookies popup detected, accepting cookies")
                 self.home_page.do_accept_cookies()
                 self.logger.log_info("Cookies accepted successfully")

@@ -409,6 +409,14 @@ class ConfigManager:
 
         print("=" * 60)
 
+    def get_mfa_config(self) -> Dict[str, Any]:
+        """
+        Get MFA configuration settings.
+        Returns:
+            Dict[str, Any]: MFA configuration dictionary
+        """
+        return self.yaml_config.get("mfa", {})
+
 
 # Global configuration instance
 config = ConfigManager()
@@ -459,17 +467,6 @@ def print_config_summary() -> None:
     """Print configuration summary."""
     config.print_configuration_summary()
 
-
-# Auto-validation on import (can be disabled by setting SKIP_CONFIG_VALIDATION=true)
-if not os.getenv('SKIP_CONFIG_VALIDATION', '').lower() == 'true':
-    try:
-        validation = validate_config()
-        if validation['errors']:
-            print("⚠️  Configuration validation found issues. Run print_config_summary() for details.")
-    except Exception as ex:
-        # ✅ IMPROVED: Catch the exception but print a warning to stderr.
-        # This makes the failure visible without stopping the program.
-        print(
-            f"WARNING: An unexpected error occurred during initial config validation: {ex}",
-            file=sys.stderr
-        )
+def get_mfa_config() -> Dict[str, Any]:
+    """Get MFA configuration."""
+    return config.get_mfa_config()

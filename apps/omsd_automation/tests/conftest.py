@@ -376,9 +376,9 @@ def customer_credentials(all_user_credentials):
 
 
 @pytest.fixture(scope="function")
-def valid_user_credentials(software_uploader_credentials):
+def valid_user_credentials(device_update_executor_without_permission_credentials):
     """Function-scoped fixture providing default valid user credentials."""
-    return software_uploader_credentials
+    return device_update_executor_without_permission_credentials
 
 
 @pytest.fixture(scope="function")
@@ -397,7 +397,7 @@ def invalid_user_credentials():
 @pytest.fixture(scope="function")
 def login_page(page: Page):
     """Function-scoped fixture providing LoginPage instance."""
-    from omsd_automation.pages.login_page import LoginPage
+    from apps.omsd_automation.pages.login_page import LoginPage
     base_url = get_base_url()
     page.goto(base_url)
     return LoginPage(page)
@@ -406,10 +406,14 @@ def login_page(page: Page):
 @pytest.fixture(scope="function")
 def home_page(page: Page):
     """Function-scoped fixture providing HomePage instance."""
-    from omsd_automation.pages.home_page import HomePage
+    from apps.omsd_automation.pages.home_page import HomePage
     return HomePage(page)
 
-
+@pytest.fixture(scope="function")
+def product_category_page(page: Page):
+    """Function-scoped fixture providing ProductCategoryPage instance."""
+    from apps.omsd_automation.pages.product_category_page import ProductCategoryPage
+    return ProductCategoryPage(page)
 # =============================================================================
 # ACTION LAYER FIXTURES
 # =============================================================================
@@ -417,15 +421,21 @@ def home_page(page: Page):
 @pytest.fixture(scope="function")
 def login_actions(login_page):
     """Function-scoped fixture providing LoginActions."""
-    from omsd_automation.actions.login_actions import LoginActions
+    from apps.omsd_automation.actions.login_actions import LoginActions
     return LoginActions(login_page)
 
 
 @pytest.fixture(scope="function")
 def home_actions(home_page):
     """Function-scoped fixture providing HomeActions instance."""
-    from omsd_automation.actions.home_actions import HomeActions
+    from apps.omsd_automation.actions.home_actions import HomeActions
     return HomeActions(home_page)
+
+@pytest.fixture(scope="function")
+def product_category_actions(product_category_page):
+    """Function-scoped fixture providing ProductCategoryActions instance."""
+    from apps.omsd_automation.actions.product_category_actions import ProductCategoryActions
+    return ProductCategoryActions(product_category_page)
 
 
 # =============================================================================

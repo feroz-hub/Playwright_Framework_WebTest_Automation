@@ -54,6 +54,39 @@ environments:
       customer:
         description: "Customer user with limited access"
         role: "customer"
+  dev:
+    # base_url will come from DEV_BASE_URL env var, this is a fallback
+    base_url: "https://softwaredelivery-dev.olympusmedical.com"
+
+    # User roles available in dev (credentials from environment variables)
+    user_roles:
+      - software_uploader
+      - distribution_manager
+      - distribution_manager_without_permission
+      - device_update_executor_without_permission
+      - device_update_executor
+      - customer
+
+    # Fallback user structure (actual credentials in .env)
+    users:
+      software_uploader:
+        description: "User with software upload permissions"
+        role: "uploader"
+      distribution_manager:
+        description: "User with distribution management permissions"
+        role: "manager"
+      distribution_manager_without_permission:
+        description: "Manager user without certain permissions"
+        role: "limited_manager"
+      device_update_executor_without_permission:
+        description: "Executor user without certain permissions"
+        role: "limited_executor"
+      device_update_executor:
+        description: "User with device update execution permissions"
+        role: "executor"
+      customer:
+        description: "Customer user with limited access"
+        role: "customer"
 
   prod:
     # base_url will come from PROD_BASE_URL env var, this is a fallback
@@ -91,3 +124,16 @@ timeouts:
   default: 30000
   short: 5000
   long: 60000
+
+mfa:
+  enabled: true
+  method: email
+  email_provider: imap
+  email:
+    server: imap.outlook.com
+    port: 993
+    username: your_test_email@company.com
+    password: your_secure_app_password
+    subject_filter: "Your OTP Code"
+    otp_regex: "\\b\\d{6}\\b"
+    timeout: 60

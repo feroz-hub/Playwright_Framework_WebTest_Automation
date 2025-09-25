@@ -1,23 +1,23 @@
 # file: actions/login_actions.py
-from omsd_automation.pages.login_page import LoginPage
-from omsd_automation.utils.logger_utils import setup_test_logger
+from apps.omsd_automation.actions.base_actions import BaseActions
+from apps.omsd_automation.pages.login_page import LoginPage
 
 
-class LoginActions:
+class LoginActions(BaseActions):
     """
     Orchestrates LoginPage methods into reusable business workflows.
 
     This class contains all logging and workflow logic, keeping the
     Page Object and tests clean.
     """
-    def __init__(self, login_page: LoginPage | None = None):
+    def __init__(self, login_page: LoginPage | None = None, logger=None):
         """Initializes the actions with a LoginPage instance.
 
         Args:
             login_page: Page object for login interactions.
         """
+        super().__init__(logger)
         self.login_page = login_page
-        self.logger = setup_test_logger("LoginActions")
 
     # def open_login_page(self, url: str) -> None:
     #     """Opens the login page URL."""
@@ -30,8 +30,11 @@ class LoginActions:
         """
         self.logger.log_info(f"Attempting to log in as user: '{username}'")
         try:
-            self.login_page.enter_username(username).enter_password(password)
+            self.login_page.enter_username(username)
+            self.login_page.enter_password(password)
             self.login_page.click_next()
+            # if self.login_page.is_mfa_required():
+            #     if
             self.logger.log_info("Login form submitted successfully.")
         except Exception as e:
             # This broad catch is acceptable here ONLY because we log and re-raise.

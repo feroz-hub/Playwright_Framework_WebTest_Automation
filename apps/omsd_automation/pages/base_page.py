@@ -20,7 +20,7 @@ class BasePage:
         """Navigates the current page to the specified URL with sensible defaults."""
         # Use a more forgiving wait strategy and higher timeout to accommodate
         # post-login redirects and heavy pages in staging environments.
-        self.page.goto(url, wait_until="domcontentloaded", timeout=60000)
+        self.page.goto(url, timeout=60000)
 
     # --- Core Interaction Methods ---
 
@@ -46,6 +46,7 @@ class BasePage:
 
     # --- State & Data Retrieval Methods ---
 
+
     def do_get_text(self, selector: str) -> str:
         """Retrieves the visible inner text of an element."""
         return self.page.locator(selector).inner_text()
@@ -54,15 +55,15 @@ class BasePage:
         """Retrieves the 'value' attribute from an input element."""
         return self.page.locator(selector).input_value()
 
-    def is_visible(self, selector: str) -> bool:
+    def to_be_visible(self, selector: str) -> bool:
         """Checks if an element is currently visible on the page."""
         return self.page.locator(selector).is_visible()
 
-    def is_enabled(self, selector: str) -> bool:
+    def to_be_enabled(self, selector: str) -> bool:
         """Checks if an element is enabled (e.g., a button is clickable)."""
         return self.page.locator(selector).is_enabled()
 
-    def is_checked(self, selector: str) -> bool:
+    def to_be_checked(self, selector: str) -> bool:
         """Checks if a checkbox or radio button is checked."""
         return self.page.locator(selector).is_checked()
 
@@ -78,7 +79,12 @@ class BasePage:
             return True
         except PlaywrightTimeoutError:
             return False
-
+    def wait_for_selector_base(self, selector : str):
+        try:
+            self.page.wait_for_selector(selector)
+            return True
+        except PlaywrightTimeoutError:
+            return False
     # --- Utility & Advanced Methods ---
 
     def take_screenshot(
