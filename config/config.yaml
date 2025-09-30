@@ -125,15 +125,23 @@ timeouts:
   short: 5000
   long: 60000
 
+
 mfa:
   enabled: true
   method: email
   email_provider: imap
   email:
-    server: imap.outlook.com
+    server: imap.outlook.com # Correct for Outlook/Microsoft 365
     port: 993
-    username: your_test_email@company.com
+    # Note: Username and password should be loaded from your .env file
+    # or environment variables for security.
+    username: your_test_email@your_domain.com
     password: your_secure_app_password
-    subject_filter: "Your OTP Code"
+
+    # ✅ UPDATED: This now matches the subject from your screenshot
+    subject_filter: "OMSDAD-Stg3 account email verification code"
+
+    # This regex is correct for a 6-digit code like "144639"
     otp_regex: "\\b\\d{6}\\b"
-    timeout: 60
+
+    timeout: 60 # Timeout in seconds to wait for the email

@@ -18,3 +18,15 @@ allure-pytest # Plugin to generate rich Allure test reports
 
 # Configuration Management
 PyYAML
+
+# Environment Variable Management
+python-dotenv # To manage environment variables from a .env file
+
+# Twilio for SMS notifications
+twilio
+
+# Microsoft Authentication Library for API authentication
+msal # Microsoft Authentication Library for Python
+
+# HTTP Client
+requests # To make HTTP requests for API interactions

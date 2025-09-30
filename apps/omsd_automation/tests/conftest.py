@@ -31,8 +31,7 @@ from config.config_manager import (
 SCREENSHOTS_DIR = Path(__file__).parent / "screenshots"
 VIDEOS_DIR = Path(__file__).parent / "videos"
 TEST_DATA_DIR = Path(__file__).parent / "test_data"
-
-
+TESTS_DIR = Path(__file__).parent/"apps/omsd_automation/tests"
 def pytest_addoption(parser):
     """Add custom command-line options for pytest.
     Only define options that are not provided by common plugins to avoid conflicts.

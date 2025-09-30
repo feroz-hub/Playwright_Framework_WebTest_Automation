@@ -28,7 +28,7 @@ class HomePage(BasePage):
 
     Attributes:
         USER_PROFILE: CSS selector for the visible user display name element.
-        SIGN_OUT_LINK: XPath selector for the Sign Out menu item.
+        SIGN_OUT_LINK: XPath selector for the Sign-Out menu item.
         ACCEPT_COOKIES_BTN: CSS selector for the cookie consent accept button.
         PRODUCT_CATEGORY_HEADING: CSS selector for the Product Category heading.
     """
@@ -68,12 +68,26 @@ class HomePage(BasePage):
     # UI Interaction Methods (do_*)
     # ------------------------
     def do_open_user_menu(self) -> HomePage:
-        """Click on the user profile menu."""
+        """Open the user profile menu by clicking the display name.
+
+        Returns:
+            HomePage: The same page object to allow fluent chaining.
+
+        Raises:
+            playwright.sync_api.Error: If the element cannot be found or clicked.
+        """
         self.do_click(self.USER_PROFILE)
         return self
 
     def do_click_sign_out(self) -> HomePage:
-        """Click on the sign-out link."""
+        """Click the Sign-Out action within the user menu.
+
+        Returns:
+            HomePage: The same page object to allow fluent chaining.
+
+        Raises:
+            playwright.sync_api.Error: If the element cannot be found or clicked.
+        """
         self.do_click(self.SIGN_OUT_LINK)
         return self
 
@@ -85,10 +99,14 @@ class HomePage(BasePage):
 
         Returns:
             HomePage: The same page object to allow fluent chaining.
+
+        Raises:
+            playwright.sync_api.Error: If the cookie button exists but cannot be clicked.
+            TimeoutError: Internally swallowed if the popup does not appear in time.
         """
         try:
             cookie_btn = self.page.locator(self.ACCEPT_COOKIES_BTN)
-            cookie_btn.wait_for(state="visible", timeout=7000)
+            # cookie_btn.wait_for(state="visible", timeout=7000)
             cookie_btn.click()
         except PlaywrightTimeoutError:
             # Popup not present → continue silently
@@ -96,7 +114,12 @@ class HomePage(BasePage):
         return self
 
     def get_product_category_heading(self) -> Locator:
-        """Returns the locator for the 'Product Category' heading."""
+        """Return a Locator for the 'Product Category' heading.
+
+        Returns:
+            Locator: A Playwright Locator pointing to the heading element, for
+                advanced assertions or chained interactions in tests/actions.
+        """
         return self.get_locator(self.PRODUCT_CATEGORY_HEADING)
 
     # ------------------------
@@ -114,20 +137,39 @@ class HomePage(BasePage):
     # Verification Methods (is_*, verify_*)
     # ------------------------
     def is_user_profile_visible(self) -> bool:
-        """Checks if the user profile element is visible."""
+        """Check if the user profile element is visible.
+
+        Returns:
+            bool: True if visible, otherwise False.
+        """
         return self.to_be_visible(self.USER_PROFILE)
 
     def is_sign_out_link_visible(self) -> bool:
-        """Checks if the sign-out link is visible (after opening a user menu)."""
+        """Check if the Sign-Out link is visible (after opening the user menu).
+
+        Returns:
+            bool: True if visible, otherwise False.
+        """
         return self.to_be_visible(self.SIGN_OUT_LINK)
 
     def is_cookies_popup_present_enabled(self) -> bool:
-        """Checks if the cookies acceptance popup is currently visible."""
-        self.wait_for_element(self.ACCEPT_COOKIES_BTN, state="visible", timeout=5000)
+        """Check if the cookies acceptance popup is visible and enabled.
+
+        This waits up to 10 seconds for the popup to appear, then checks whether
+        the Accept button is enabled.
+
+        Returns:
+            bool: True if the popup's Accept button is enabled, otherwise False.
+        """
+        self.wait_for_element(self.ACCEPT_COOKIES_BTN, state="visible", timeout=10000)
         return self.to_be_enabled(self.ACCEPT_COOKIES_BTN)
 
     def verify_user_logged_in(self) -> bool:
-        """Verify if user profile is visible (indicates successful login)."""
+        """Verify that the user is logged in by checking profile visibility.
+
+        Returns:
+            bool: True if the user profile element is visible, otherwise False.
+        """
         return self.to_be_visible(self.USER_PROFILE)
 
     def verify_on_home_page(self, expected_url_fragment: Optional[str] = None) -> bool:
@@ -154,25 +196,26 @@ class HomePage(BasePage):
     # Wait Methods
     # ------------------------
     def wait_for_user_profile(self, timeout: int = 10000) -> bool:
-        """
-        Wait for user profile element to be visible.
+        """Wait for the user profile element to become visible.
 
         Args:
-            timeout: Timeout in milliseconds
+            timeout: Maximum time to wait, in milliseconds.
 
         Returns:
-            bool: True if element becomes visible, False on timeout
+            bool: True if the element becomes visible within the timeout; False otherwise.
         """
         return self.wait_for_element(self.USER_PROFILE, state="visible", timeout=timeout)
 
     def wait_for_page_load(self, timeout: int = 10000) -> bool:
-        """
-        Wait for the home page to fully load by waiting for the user profile.
+        """Wait until the Home page has loaded sufficiently for interactions.
+
+        This implementation considers the page "loaded" once the user profile
+        element is visible, which is a robust signal post-authentication.
 
         Args:
-            timeout: Timeout in milliseconds
+            timeout: Maximum time to wait, in milliseconds.
 
         Returns:
-            bool: True if the page loads successfully, False on timeout
+            bool: True if the indicator becomes visible within the timeout; False otherwise.
         """
         return self.wait_for_user_profile(timeout)

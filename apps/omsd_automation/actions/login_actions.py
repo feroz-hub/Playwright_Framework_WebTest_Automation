@@ -33,6 +33,7 @@ class LoginActions(BaseActions):
             self.login_page.enter_username(username)
             self.login_page.enter_password(password)
             self.login_page.click_next()
+            self.take_screenshot(test_case="SC_01")
             # if self.login_page.is_mfa_required():
             #     if
             self.logger.log_info("Login form submitted successfully.")

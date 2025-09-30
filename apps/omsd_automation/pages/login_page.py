@@ -28,20 +28,21 @@ class LoginPage(BasePage):
     responsibilities focused and test code readable.
 
     Attributes:
-        USERNAME_INPUT: CSS selector for the username field.
-        PASSWORD_INPUT: CSS selector for the password field.
-        NEXT_BUTTON: CSS selector for the Next/Submit button.
+        EMAIL_INPUT: CSS selector for the email/username field.
+        PASSWORD: CSS selector for the password field.
+        SIGNIN_BUTTON: CSS selector for the Sign in/submit button.
         FORGOT_PASSWORD_LINK: CSS selector for the Forgot Password link.
+        MFA_LABEL: Text locator used to detect if MFA is required.
     """
 
     # --- Locators (kept as class-level constants to promote reuse and DRY) ---
     FORGOT_PASSWORD_LINK: ClassVar[str] = "#forgotPassword"
 
     # --- Locators ---
-    EMAIL_INPUT = 'input[aria-label="Email Address"]'
-    PASSWORD = 'input[aria-label="Password"]'
-    SIGNIN_BUTTON = 'button:has-text("Sign in")'
-    MFA_LABEL = 'text=Please select your preferred MFA method'
+    EMAIL_INPUT: ClassVar[str] = 'input[aria-label="Email Address"]'
+    PASSWORD: ClassVar[str] = 'input[aria-label="Password"]'
+    SIGNIN_BUTTON: ClassVar[str] = 'button:has-text("Sign in")'
+    MFA_LABEL: ClassVar[str] = 'text=Please select your preferred MFA method'
 
     def __init__(self, page: Page) -> None:
         """Initialize the page object.
@@ -54,13 +55,16 @@ class LoginPage(BasePage):
     # --- UI Interaction Methods ---
 
     def enter_username(self, username: str) -> None:
-        """Type the username into the username input field.
+        """Type the username into the email/username input field.
 
         Args:
             username: The username or email to input.
 
         Returns:
-            LoginPage: The same page object to allow fluent chaining.
+            None
+
+        Raises:
+            playwright.sync_api.Error: If the element cannot be found or interacted with.
         """
         self.do_fill(self.EMAIL_INPUT, username)
 
@@ -72,16 +76,22 @@ class LoginPage(BasePage):
             password: The clear-text password to input.
 
         Returns:
-            LoginPage: The same page object to allow fluent chaining.
+            None
+
+        Raises:
+            playwright.sync_api.Error: If the element cannot be found or interacted with.
         """
         self.do_fill(self.PASSWORD, password)
 
 
     def click_next(self) -> None:
-        """Click the Next button to submit the current step of login.
+        """Click the Sign-in button to submit the login form.
 
         Returns:
             None
+
+        Raises:
+            playwright.sync_api.Error: If the element cannot be found or clicked.
         """
         self.do_click(self.SIGNIN_BUTTON)
 
@@ -90,10 +100,23 @@ class LoginPage(BasePage):
 
         Returns:
             None
+
+        Raises:
+            playwright.sync_api.Error: If the element cannot be found or clicked.
         """
         self.do_click(self.FORGOT_PASSWORD_LINK)
 
 
 
     def is_mfa_required(self) -> bool:
+        """Determine whether the MFA step is required.
+
+        This checks for visibility of an MFA-specific label. Using a visibility
+        check instead of relying on navigation avoids flakiness when the page
+        updates dynamically after sign-in.
+
+        Returns:
+            bool: True if the MFA label is visible, otherwise False.
+        """
+        # Visibility is a robust signal that the MFA flow has been triggered.
         return self.to_be_visible(self.MFA_LABEL)

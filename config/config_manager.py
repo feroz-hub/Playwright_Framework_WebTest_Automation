@@ -409,15 +409,36 @@ class ConfigManager:
 
         print("=" * 60)
 
+    # Replace the existing get_mfa_config method with this one
+
     def get_mfa_config(self) -> Dict[str, Any]:
         """
-        Get MFA configuration settings.
+        Get MFA configuration by merging settings from config.yaml
+        and sensitive credentials from environment variables.
+
         Returns:
-            Dict[str, Any]: MFA configuration dictionary
+            Dict[str, Any]: The complete, merged MFA configuration dictionary.
         """
-        return self.yaml_config.get("mfa", {})
+        # 1. Get the base MFA configuration from the YAML file
+        # We use .copy() to avoid modifying the original loaded config
+        mfa_config = self.yaml_config.get("mfa", {}).copy()
+        email_config = mfa_config.get("email")
 
+        if not email_config:
+            return mfa_config  # Return if no 'email' section exists
 
+        # 2. Look for sensitive values in the environment variables
+        env_username = os.getenv("MFA_EMAIL_USERNAME")
+        env_password = os.getenv("MFA_EMAIL_PASSWORD")
+
+        # 3. Override the YAML values with environment values if they exist
+        # This ensures environment variables always have priority.
+        if env_username:
+            email_config["username"] = env_username
+        if env_password:
+            email_config["password"] = env_password
+
+        return mfa_config
 # Global configuration instance
 config = ConfigManager()
 
@@ -467,6 +488,3 @@ def print_config_summary() -> None:
     """Print configuration summary."""
     config.print_configuration_summary()
 
-def get_mfa_config() -> Dict[str, Any]:
-    """Get MFA configuration."""
-    return config.get_mfa_config()

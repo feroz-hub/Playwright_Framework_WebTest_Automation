@@ -16,7 +16,7 @@ Design notes:
 - Methods intentionally perform the action (click) rather than return locators to keep
   the public API concise for test authors.
 """
-
+from playwright.sync_api import Page
 
 from apps.omsd_automation.pages.base_page import BasePage
 
@@ -43,13 +43,13 @@ class ProductCategoryPage(BasePage):
     # Back button selector. We keep a clear, explicit selector (text-based) for stability.
     BACK_BUTTON = "button:has-text('Back')"
 
-    def __init__(self) -> None:
+    def __init__(self, page: Page) -> None:
         """Initialize the page object.
 
         Args:
             page: A Playwright Page instance.
         """
-        super().__init__()
+        super().__init__(page=page)
 
     @staticmethod
     def _category_button(container_selector: str, product_name: str) -> str:
