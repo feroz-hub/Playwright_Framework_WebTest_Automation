@@ -1,6 +1,5 @@
 ﻿import imaplib
 import email
-from email import message_from_bytes
 from email.message import Message
 import re
 import time
